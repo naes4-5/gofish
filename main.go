@@ -4,74 +4,96 @@ import (
 	"fmt"
 	"errors"
 	"math/rand/v2"
-	"log"
+	//"log"
+	//"os"
 )
 
-var suits [4]string = [4]string{"spades", "clubs", "hearts", "diamonds"}
+var suits map[int]string = map[int]string {
+	0: "♤", 
+	1: "♡", 
+	2: "♢", 
+	3: "♧",
+}
 
-type card struct {
+type card_t struct {
 	suit string;
 	rank int;
 }
 
-type deck struct {
-	cards      map[string][]card;
-	// next_card  card
-	cards_left int;
+type deck_t struct {
+	cards        [4][]card_t;
+	cardsLeft    int;
+	cardsPerSuit int;
 }
 
-type player struct {
-	hand  []card;
+type player_t struct {
+	hand  []card_t;
 	books int;
 }
 
-func (d *deck)draw_random_card() (card, error) {
-	if d.cards_left <= 0 {
-		return card {}, errors.New("Deck empty: no more cards to draw")
+func newDeck() deck_t {
+	var deck deck_t
+	deck.cardsPerSuit = 13
+	deck.cards = [4][]card_t{}
+	for s := 0; s < len(suits); s++ {
+		deck.cards[s] = make([]card_t, deck.cardsPerSuit)
+		for i := 0; i < deck.cardsPerSuit; i++ {
+			deck.cards[s][i] = card_t {suit: suits[s], rank: i+1}
+		}
 	}
-	
-	rsuit := suits[rand.IntN(4)]
-	for len(d.cards[rsuit]) < 0 {
-		rsuit = suits[rand.IntN(3)]
+	deck.cardsLeft = 52
+	return deck
+}
+
+func (deck *deck_t) drawCard() (card_t, error) {
+	if deck.cardsLeft <= 0 {
+		return card_t {}, errors.New(fmt.Sprintf("no more cards to draw"))
 	}
 
-	var rrank int
-	if len(d.cards[rsuit]) > 1 {
-		rrank = rand.IntN(len(d.cards[rsuit]) - 1)
-	} else {
-		rrank = 0
+	rsuit := rand.IntN(4)
+	for len(deck.cards[rsuit]) == 0 {
+		rsuit = rand.IntN(4)
 	}
+	i := rand.IntN(len(deck.cards[rsuit]))
+	ret := deck.cards[rsuit][i]
 	
-	ret := d.cards[rsuit][rrank]
-	d.cards_left--
-	
-	copy(d.cards[rsuit][rrank:], d.cards[rsuit][rrank+1:])
-	d.cards[rsuit] = d.cards[rsuit][:len(d.cards[rsuit])-1]
+	deck.cards[rsuit] = append(deck.cards[rsuit][:i], deck.cards[rsuit][i+1:]...)
+	deck.cardsLeft--
 	return ret, nil
 }
 
-func get_deck() deck {
-	var ret deck
-	ret.cards_left = 52
-	ret.cards = make(map[string][]card)
-	for _, suit := range suits {
-		next := []card{}
-		for i := 0; i < 13; i++ {
-			next = append(next, card {suit: suit, rank: i + 1})
-		}
-		ret.cards[suit] = next
+func (deck *deck_t) startGame(handSize int, players ...*player_t) error {
+	if len(players) * handSize > deck.cardsLeft {
+		return errors.New(fmt.Sprintf("Too many players for handsize"))
+	} else if len(players) < 2 {
+		return errors.New(fmt.Sprintf("Not enough players to play"))
 	}
-	return ret
+	for _, player := range players {
+		for i := 0; i < handSize; i++ {
+			card, err := deck.drawCard()
+			if err != nil {
+				return err
+			}
+			player.hand = append(player.hand, card)
+		}
+	}
+	return nil
 }
 
 func main() {
-	deck1 := get_deck()
-	for deck1.cards_left > 0 {
-		next_card, err := deck1.draw_random_card()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("%d of %s\n", next_card.rank, next_card.suit)
+	deck := newDeck()
+	p1 := player_t {hand: []card_t{}, books: 0}
+	p2 := player_t {hand: []card_t{}, books: 0}
+	
+	deck.startGame(5, &p1, &p2)
+	for i := 0; i < 5; i++ {
+		card := p1.hand[i]
+		fmt.Printf("%d of %s\n", card.rank, card.suit)
+	}
+	fmt.Printf("\n\n")
+	for i := 0; i < 5; i++ {
+		card := p2.hand[i]
+		fmt.Printf("%d of %s\n", card.rank, card.suit)
 	}
 }
 
