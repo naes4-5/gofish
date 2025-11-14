@@ -6,7 +6,7 @@ import (
 	"math/rand/v2"
 	"sort"
 	//"log"
-	//"os"
+	"os"
 )
 
 var suits map[int]string = map[int]string {
@@ -36,6 +36,17 @@ func sortHand(player *player_t) {
 	sort.Slice(player.hand, func(i, j int) bool {
 		return player.hand[i].rank < player.hand[j].rank
 	})
+}
+
+func printHands(players []player_t) {
+	for _, player := range players {
+		for i, card:= range player.hand {
+			fmt.Printf("%d of %s\n", card.rank, card.suit)
+			if i == len(player.hand) - 1 {
+				fmt.Printf("\n")
+			}
+		}
+	}
 }
 
 func newDeck() deck_t {
@@ -69,23 +80,25 @@ func (deck *deck_t) drawCard() (card_t, error) {
 	return ret, nil
 }
 
-func (deck *deck_t) startGame(handSize int, players ...*player_t) error {
+func (deck *deck_t) startGame(handSize int, players ...*player_t) ([]player_t, error) {
 	if len(players) * handSize > deck.cardsLeft {
-		return errors.New(fmt.Sprintf("Too many players for handsize"))
+		return []player_t{}, errors.New(fmt.Sprintf("Too many players for handsize"))
 	} else if len(players) < 2 {
-		return errors.New(fmt.Sprintf("Not enough players to play"))
+		return []player_t{}, errors.New(fmt.Sprintf("Not enough players to play"))
 	}
+	playerList := make([]player_t, len(players))
 	for _, player := range players {
 		for i := 0; i < handSize; i++ {
 			card, err := deck.drawCard()
 			if err != nil {
-				return err
+				return []player_t{}, err
 			}
 			player.hand = append(player.hand, card)
 		}
 		sortHand(player)
+		playerList = append(playerList, *player)
 	}
-	return nil
+	return playerList, nil
 }
 
 func (player *player_t) bookCheck() []int {
@@ -125,26 +138,11 @@ func main() {
 	p4 := player_t {hand: []card_t{}, books: 0}
 	
 	handSize := 5
-	deck.startGame(handSize, &p1, &p2, &p3, &p4)
-	for i := 0; i < handSize; i++ {
-		card := p1.hand[i]
-		fmt.Printf("%d of %s\n", card.rank, card.suit)
+	players, err := deck.startGame(handSize, &p1, &p2, &p3, &p4)
+	if err != nil {
+		fmt.Printf(err.Error())
+		os.Exit(1)
 	}
-		
-	fmt.Printf("\n")
-	for i := 0; i < handSize; i++ {
-		card := p2.hand[i]
-		fmt.Printf("%d of %s\n", card.rank, card.suit)
-	}
-	fmt.Printf("\n")
-	for i := 0; i < handSize; i++ {
-		card := p3.hand[i]
-		fmt.Printf("%d of %s\n", card.rank, card.suit)
-	}
-	fmt.Printf("\n")
-	for i := 0; i < handSize; i++ {
-		card := p4.hand[i]
-		fmt.Printf("%d of %s\n", card.rank, card.suit)
-	}
+	printHands(players)
 }
 
