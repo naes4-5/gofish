@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"errors"
 	"math/rand/v2"
+	"sort"
 	//"log"
 	//"os"
 )
@@ -29,6 +30,12 @@ type deck_t struct {
 type player_t struct {
 	hand  []card_t;
 	books int;
+}
+
+func sortHand(player *player_t) {
+	sort.Slice(player.hand, func(i, j int) bool {
+		return player.hand[i].rank < player.hand[j].rank
+	})
 }
 
 func newDeck() deck_t {
@@ -76,16 +83,20 @@ func (deck *deck_t) startGame(handSize int, players ...*player_t) error {
 			}
 			player.hand = append(player.hand, card)
 		}
+		sortHand(player)
 	}
 	return nil
 }
+
+func (player *player_t) bookCheck() int
 
 func main() {
 	deck := newDeck()
 	p1 := player_t {hand: []card_t{}, books: 0}
 	p2 := player_t {hand: []card_t{}, books: 0}
+	p3 := player_t {hand: []card_t{}, books: 0}
 	
-	deck.startGame(5, &p1, &p2)
+	deck.startGame(5, &p1, &p2, &p3)
 	for i := 0; i < 5; i++ {
 		card := p1.hand[i]
 		fmt.Printf("%d of %s\n", card.rank, card.suit)
@@ -93,6 +104,11 @@ func main() {
 	fmt.Printf("\n\n")
 	for i := 0; i < 5; i++ {
 		card := p2.hand[i]
+		fmt.Printf("%d of %s\n", card.rank, card.suit)
+	}
+	fmt.Printf("\n\n")
+	for i := 0; i < 5; i++ {
+		card := p3.hand[i]
 		fmt.Printf("%d of %s\n", card.rank, card.suit)
 	}
 }
