@@ -88,27 +88,62 @@ func (deck *deck_t) startGame(handSize int, players ...*player_t) error {
 	return nil
 }
 
-func (player *player_t) bookCheck() int
+func (player *player_t) bookCheck() []int {
+	bookedRanks := make([]int, 1)
+	c := 1
+	for i := 0; i < len(player.hand)-1; i++ {
+		if player.hand[i].rank != player.hand[i+1].rank {
+			c = 1
+			continue
+		}
+		c++
+		if c == 4 {
+			bookedRanks = append(bookedRanks, player.hand[i].rank)
+		}
+	}
+	return bookedRanks
+}
+
+func (player *player_t) removeBooks(ranks []int) int {
+	for _, rank := range ranks {
+		for i := 0; i < len(player.hand); i++ {
+			if player.hand[i].rank == rank {
+				player.hand = append(player.hand[:i], player.hand[i+4:]...)
+				player.books++
+				break
+			}
+		}
+	}
+	return len(ranks)
+}
 
 func main() {
 	deck := newDeck()
 	p1 := player_t {hand: []card_t{}, books: 0}
 	p2 := player_t {hand: []card_t{}, books: 0}
 	p3 := player_t {hand: []card_t{}, books: 0}
+	p4 := player_t {hand: []card_t{}, books: 0}
 	
-	deck.startGame(5, &p1, &p2, &p3)
-	for i := 0; i < 5; i++ {
+	handSize := 5
+	deck.startGame(handSize, &p1, &p2, &p3, &p4)
+	for i := 0; i < handSize; i++ {
 		card := p1.hand[i]
 		fmt.Printf("%d of %s\n", card.rank, card.suit)
 	}
-	fmt.Printf("\n\n")
-	for i := 0; i < 5; i++ {
+		
+	fmt.Printf("\n")
+	for i := 0; i < handSize; i++ {
 		card := p2.hand[i]
 		fmt.Printf("%d of %s\n", card.rank, card.suit)
 	}
-	fmt.Printf("\n\n")
-	for i := 0; i < 5; i++ {
+	fmt.Printf("\n")
+	for i := 0; i < handSize; i++ {
 		card := p3.hand[i]
+		fmt.Printf("%d of %s\n", card.rank, card.suit)
+	}
+	fmt.Printf("\n")
+	for i := 0; i < handSize; i++ {
+		card := p4.hand[i]
 		fmt.Printf("%d of %s\n", card.rank, card.suit)
 	}
 }
