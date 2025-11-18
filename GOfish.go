@@ -5,8 +5,7 @@ import (
 	"errors"
 	"math/rand/v2"
 	"sort"
-	//"log"
-	"os"
+	"log"
 )
 
 var suits map[int]string = map[int]string {
@@ -16,29 +15,41 @@ var suits map[int]string = map[int]string {
 	3: "♧",
 }
 
-type card_t struct {
+type Card struct {
 	suit string;
 	rank int;
 }
 
-type deck_t struct {
-	cards        [4][]card_t;
+type Deck struct {
+	cards        [4][]Card;
 	cardsLeft    int;
 	cardsPerSuit int;
 }
 
-type player_t struct {
-	hand  []card_t;
+type Player struct {
+	hand  []Card;
 	books int;
 }
 
-func sortHand(player *player_t) {
+func sortHand(player *Player) {
 	sort.Slice(player.hand, func(i, j int) bool {
 		return player.hand[i].rank < player.hand[j].rank
 	})
 }
 
-func printHands(players []player_t) {
+func (player *Player) handContains(rank int) (int, error) {
+	if len(player.hand) == 0 {
+		return -1, errors.New("No cards in hand")
+	}
+	for i, card := range player.hand {
+		if card.rank == rank {
+			return i, nil
+		}
+	}
+	return -1, nil
+}
+
+func printHands(players []Player) {
 	for _, player := range players {
 		for i, card:= range player.hand {
 			fmt.Printf("%d of %s\n", card.rank, card.suit)
@@ -49,23 +60,23 @@ func printHands(players []player_t) {
 	}
 }
 
-func newDeck() deck_t {
-	var deck deck_t
+func newDeck() Deck {
+	var deck Deck
 	deck.cardsPerSuit = 13
-	deck.cards = [4][]card_t{}
+	deck.cards = [4][]Card{}
 	for s := 0; s < len(suits); s++ {
-		deck.cards[s] = make([]card_t, deck.cardsPerSuit)
+		deck.cards[s] = make([]Card, deck.cardsPerSuit)
 		for i := 0; i < deck.cardsPerSuit; i++ {
-			deck.cards[s][i] = card_t {suit: suits[s], rank: i+1}
+			deck.cards[s][i] = Card {suit: suits[s], rank: i+1}
 		}
 	}
 	deck.cardsLeft = 52
 	return deck
 }
 
-func (deck *deck_t) drawCard() (card_t, error) {
+func (deck *Deck) drawCard() (Card, error) {
 	if deck.cardsLeft <= 0 {
-		return card_t {}, errors.New(fmt.Sprintf("no more cards to draw"))
+		return Card {}, errors.New(fmt.Sprintf("no more cards to draw"))
 	}
 
 	rsuit := rand.IntN(4)
@@ -80,18 +91,19 @@ func (deck *deck_t) drawCard() (card_t, error) {
 	return ret, nil
 }
 
-func (deck *deck_t) startGame(handSize int, players ...*player_t) ([]player_t, error) {
+func (deck *Deck) startGame(handSize int, players ...*Player) ([]Player, error) {
 	if len(players) * handSize > deck.cardsLeft {
-		return []player_t{}, errors.New(fmt.Sprintf("Too many players for handsize"))
+		return []Player{}, errors.New("Too many players for handsize")
 	} else if len(players) < 2 {
-		return []player_t{}, errors.New(fmt.Sprintf("Not enough players to play"))
+		return []Player{}, errors.New("Not enough players to play")
 	}
-	playerList := make([]player_t, len(players))
+	playerList := make([]Player, len(players))
 	for _, player := range players {
-		for i := 0; i < handSize; i++ {
+		startingCardsInHand := len(player.hand)
+		for i := 0; i < handSize - startingCardsInHand; i++ {
 			card, err := deck.drawCard()
 			if err != nil {
-				return []player_t{}, err
+				return []Player{}, err
 			}
 			player.hand = append(player.hand, card)
 		}
@@ -101,7 +113,7 @@ func (deck *deck_t) startGame(handSize int, players ...*player_t) ([]player_t, e
 	return playerList, nil
 }
 
-func (player *player_t) bookCheck() []int {
+func (player *Player) bookCheck() []int {
 	bookedRanks := make([]int, 1)
 	c := 1
 	for i := 0; i < len(player.hand)-1; i++ {
@@ -117,7 +129,7 @@ func (player *player_t) bookCheck() []int {
 	return bookedRanks
 }
 
-func (player *player_t) removeBooks(ranks []int) int {
+func (player *Player) removeBooks(ranks []int) int {
 	for _, rank := range ranks {
 		for i := 0; i < len(player.hand); i++ {
 			if player.hand[i].rank == rank {
@@ -132,16 +144,28 @@ func (player *player_t) removeBooks(ranks []int) int {
 
 func main() {
 	deck := newDeck()
-	p1 := player_t {hand: []card_t{}, books: 0}
-	p2 := player_t {hand: []card_t{}, books: 0}
-	p3 := player_t {hand: []card_t{}, books: 0}
-	p4 := player_t {hand: []card_t{}, books: 0}
+	p1 := Player {hand: []Card{}, books: 0}
+	p2 := Player {hand: []Card{}, books: 0}
+	p3 := Player {hand: []Card{}, books: 0}
+	p4 := Player {hand: []Card{}, books: 0}
+	p5 := Player {
+		hand: []Card {
+			Card {
+				rank: 5,
+				suit: suits[3],
+			}, 
+			Card {
+				rank: 8,
+				suit: suits[1],
+			},
+		},
+		books:0,
+	}
 	
 	handSize := 5
-	players, err := deck.startGame(handSize, &p1, &p2, &p3, &p4)
+	players, err := deck.startGame(handSize, &p1, &p2, &p3, &p4, &p5)
 	if err != nil {
-		fmt.Printf(err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
 	printHands(players)
 }
