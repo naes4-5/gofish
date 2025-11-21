@@ -106,7 +106,7 @@ func (deck *Deck) startGame(handSize int, players ...*Player) ([]Player, error) 
 	} else if len(players) < 2 {
 		return []Player{}, errors.New("Not enough players to play")
 	}
-	playerList := make([]Player, len(players))
+	playerList := []Player{}
 	for _, player := range players {
 		startingCardsInHand := len(player.hand)
 		for i := 0; i < handSize - startingCardsInHand; i++ {
@@ -132,6 +132,7 @@ func (player *Player) removeBooks() (booksRemoved []int, err error) {
 		if amt == 4 {
 			if len(player.hand) > 4 {
 				combined := append(player.hand[:ind], player.hand[ind+4:]...)
+				player.hand = []Card{}
 				player.hand = append(player.hand, combined...)
 			} else {
 				player.hand = []Card{}
@@ -149,35 +150,7 @@ func main() {
 	p2 := Player {hand: []Card{}, books: 0}
 	p3 := Player {hand: []Card{}, books: 0}
 	p4 := Player {hand: []Card{}, books: 0}
-	p5 := Player {
-		hand: []Card {
-			Card {
-				rank: 5,
-				suit: suits[3],
-			}, 
-			Card {
-				rank: 5,
-				suit: suits[2],
-			}, 
-			Card {
-				rank: 5,
-				suit: suits[1],
-			}, 
-			Card {
-				rank: 5,
-				suit: suits[0],
-			}, 
-			Card {
-				rank: 4,
-				suit: suits[1],
-			},
-			//Card {
-			//	rank: 8,
-			//	suit: suits[1],
-			//},
-		},
-		books:0,
-	}
+	p5 := Player {hand: []Card{}, books: 0}
 	
 	handSize := 5
 	players, err := deck.startGame(handSize, &p1, &p2, &p3, &p4, &p5)
@@ -189,85 +162,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(removed)
-	printHands(players)
-	//fmt.Printf("\n\n")
-	//testPlayer := Player{
-	//	hand: []Card {
-	//		Card {
-	//			rank: 5,
-	//			suit: suits[3],
-	//		}, 
-	//		Card {
-	//			rank: 5,
-	//			suit: suits[2],
-	//		}, 
-	//		Card {
-	//			rank: 5,
-	//			suit: suits[1],
-	//		}, 
-	//		Card {
-	//			rank: 5,
-	//			suit: suits[0],
-	//		}, 
-	//		Card {
-	//			rank: 7,
-	//			suit: suits[3],
-	//		}, 
-	//		Card {
-	//			rank: 7,
-	//			suit: suits[2],
-	//		}, 
-	//		Card {
-	//			rank: 7,
-	//			suit: suits[1],
-	//		}, 
-	//		Card {
-	//			rank: 7,
-	//			suit: suits[0],
-	//		}, 
-	//		Card {
-	//			rank: 9,
-	//			suit: suits[3],
-	//		}, 
-	//		Card {
-	//			rank: 9,
-	//			suit: suits[2],
-	//		}, 
-	//		Card {
-	//			rank: 9,
-	//			suit: suits[1],
-	//		}, 
-	//		Card {
-	//			rank: 9,
-	//			suit: suits[0],
-	//		},
-	//	},
-	//	books: 0,
-	//}
-	//testPlayerS := []Player{testPlayer}
-	//
-	//printHands(testPlayerS)
-	//ind, amt, err := testPlayer.handContains(5)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//fmt.Printf("the amt is: %d, and the first index is: %d\n", amt, ind)
-	//ind, amt, err = testPlayer.handContains(7)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//fmt.Printf("the amt is: %d, and the first index is: %d\n", amt, ind)
-	//ind, amt, err = testPlayer.handContains(9)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//fmt.Printf("the amt is: %d, and the first index is: %d\n", amt, ind)
-	//removed, err := testPlayer.removeBooks()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//printHands(testPlayerS)
-	//fmt.Println(removed)
+	fmt.Printf("%v\n%v\n", removed, players[len(players)-1].hand)
 }
 
