@@ -17,8 +17,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	gofish.PrintHands(players)
-	gofish.TakeTurn(players, deck)
-	fmt.Printf("Turn taken ->\n")
-	gofish.PrintHands(players)
+	for range 5 {
+		logs, err := gofish.TakeTurn(players, deck)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Turn taken -> logs: \n%s\n", logs)
+		gofish.PrintHands(players)
+		for i, player := range players {
+			fmt.Printf("Player %d has %d books\n", i+1, player.Books)
+		}
+		fmt.Printf("End of turn \n\n")
+	}
 }

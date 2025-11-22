@@ -35,14 +35,14 @@ func TakeTurn(players []Player, deck Deck) (logs string, err error) {
 			if err != nil {
 				return "", err
 			}
-			player.Hand = append(player.Hand, drawnCard)
+			players[i].Hand = append(player.Hand, drawnCard)
 			continue
 		}
 		logs += fmt.Sprintf("Player %d has %d %ds and they were given given to player %d\n", choice+1, amt, choiceRank, i+1)
 		removed := players[choice].Hand[ind : ind+amt]
 		players[choice].Hand = append(players[choice].Hand[:ind], players[choice].Hand[ind+amt:]...)
-		player.Hand = append(player.Hand, removed...)
-		sortHand(&player)
+		players[i].Hand = append(player.Hand, removed...)
+		sortHand(&players[i])
 		_, err = player.removeBooks()
 		if err != nil {
 			return "", err
