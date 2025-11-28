@@ -17,6 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	gofish.PrintHands(players)
 	for range 5 {
 		logs, err := gofish.TakeTurn(players, deck)
 		if err != nil {
